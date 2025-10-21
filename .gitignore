@@ -1,3 +1,10 @@
 /.idea
-data
+
+
+data/raw/*
+data/split/*
+# But keep the .gitkeep files
+!data/raw/.gitkeep
+!data/split/.gitkeep
+
 checkpoints
