@@ -7,4 +7,6 @@ data/split/*
 !data/raw/.gitkeep
 !data/split/.gitkeep
 
-checkpoints
+checkpoints/*
+# But keep this file
+!checkpoints/.gitkeep
