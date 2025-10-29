@@ -31,3 +31,13 @@ def get_dataloaders(data_dir, batch_size=32, num_workers=4):
     class_names = train_dataset.classes
 
     return train_loader, val_loader, test_loader, num_classes, class_names
+
+def get_classes_names(data_dir):
+    transform = get_transforms()
+
+    train_dataset = datasets.ImageFolder(
+        root=os.path.join(data_dir, "test"), transform=transform
+    )
+
+    return train_dataset.classes
+

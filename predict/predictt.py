@@ -2,23 +2,22 @@ import os
 import torch
 from PIL import Image, ImageDraw, ImageFont
 from torchvision import transforms
-from src.data_pipeline.data_loader import load_data
+
+from src.data_pipeline.data_loader import get_classes_names
 from src.models.base.resnet import ResNet50FeatureExtractor
 
 # ---------------- Configuration ----------------
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 TOP_K = 3
 
-# תיקיית שורש
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CHECKPOINT_PATH = os.path.join(PROJECT_ROOT, "checkpoints", "saved_model.pth")
 
-# נתיבי תמונות וקבצי תוצאה
 INPUT_FOLDER = os.path.join(PROJECT_ROOT, "PREDICT", "predict_photos")
 OUTPUT_FOLDER = os.path.join(PROJECT_ROOT, "PREDICT", "predict_results")
+DATA_DIR = 'data/split'
 
-# צבעים לפי דירוג
-COLORS = [(0, 128, 0), (255, 165, 0), (255, 0, 0)]  # ירוק, כתום, אדום
+COLORS = [(0, 128, 0), (255, 165, 0), (255, 0, 0)]
 
 # ---------------- Helpers ----------------
 def get_color(rank):
@@ -89,12 +88,9 @@ def predict_image(feature_extractor, classifier, image_path, classes, transform)
     top_probs = (top_probs * 100).tolist()
     return image, list(zip(top_classes, top_probs))
 
-# ---------------- Main ----------------
-def main():
-    os.makedirs(OUTPUT_FOLDER, exist_ok=True)
-
+def predict(input_folder, save_image = False, output_folder = '', checkpoint_path = None):
     # Load classes
-    _, _, _, classes = load_data()
+    classes = get_classes_names(DATA_DIR)
 
     # Feature extractor
     feature_extractor = ResNet50FeatureExtractor().to(DEVICE)
@@ -107,13 +103,13 @@ def main():
                              [0.229, 0.224, 0.225])
     ])
 
-    # דגימת תמונה ראשונה כדי לקבוע input_dim
-    image_files = [f for f in os.listdir(INPUT_FOLDER) if f.lower().endswith((".png",".jpg",".jpeg"))]
+    # input_dim
+    image_files = [f for f in os.listdir(input_folder) if f.lower().endswith((".png",".jpg",".jpeg"))]
     if not image_files:
-        print(f"❌ No images found in {INPUT_FOLDER}")
+        print(f"No images found in {input_folder}")
         return
 
-    first_image = Image.open(os.path.join(INPUT_FOLDER, image_files[0])).convert("RGB")
+    first_image = Image.open(os.path.join(input_folder, image_files[0])).convert("RGB")
     input_tensor = transform(first_image).unsqueeze(0).to(DEVICE)
     with torch.no_grad():
         sample_features = feature_extractor(input_tensor).view(input_tensor.size(0), -1)
@@ -121,18 +117,21 @@ def main():
 
     # Classifier
     classifier = torch.nn.Linear(input_dim, len(classes)).to(DEVICE)
-    classifier.load_state_dict(torch.load(CHECKPOINT_PATH, map_location=DEVICE))
+    classifier.load_state_dict(torch.load(checkpoint_path, map_location=DEVICE))
 
     # Predict
-    print(f"\n🚀 Starting prediction on folder: {INPUT_FOLDER}\n")
+    print(f"\n Starting prediction on folder: {input_folder}\n")
+    results = []
     for filename in image_files:
-        image_path = os.path.join(INPUT_FOLDER, filename)
-        image, predictions = predict_image(feature_extractor, classifier, image_path, classes, transform)
-        save_path = os.path.join(OUTPUT_FOLDER, filename)
-        create_result_image(image, predictions, save_path)
-        print(f"✅ {filename} → {[f'{cls}: {prob:.1f}%' for cls, prob in predictions]}")
+        image_path = os.path.join(input_folder, filename)
+        image, prediction = predict_image(feature_extractor, classifier, image_path, classes, transform)
+        if save_image and output_folder:
+            save_path = os.path.join(output_folder, filename)
+            create_result_image(image, prediction, save_path)
+        results.append(prediction)
+        print(f" {filename} → {[f'{cls}: {prob:.1f}%' for cls, prob in prediction]}")
 
-    print(f"\n🎉 All results saved in: {OUTPUT_FOLDER}\n")
+    return results
 
 if __name__ == "__main__":
-    main()
+    predict(INPUT_FOLDER, True, OUTPUT_FOLDER, CHECKPOINT_PATH)
