@@ -5,11 +5,12 @@ import sys
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(project_root)
 from src.evaluation.evaluator import evaluate_model
-from src.data_pipeline.data_loader import load_data
+from src.data_pipeline.data_loader import get_dataloaders
+
 from src.models.base.resnet import ResNet50FeatureExtractor
 
-def evaluate(model_path="checkpoints/saved_model.pth", device="cpu"):
-    _, _, test_loader, class_names = load_data()
+def evaluate(device="cpu"):
+    _, _, test_loader,num_classes, class_names = get_dataloaders(args.data_dir)
     feature_extractor = ResNet50FeatureExtractor()
 
     # Build classifier
@@ -18,7 +19,6 @@ def evaluate(model_path="checkpoints/saved_model.pth", device="cpu"):
     with torch.no_grad():
         sample_features = feature_extractor(images)
     input_dim = sample_features.size(1)
-    num_classes = len(class_names)
     classifier = torch.nn.Linear(input_dim, num_classes)
 
     # Load weights
@@ -39,5 +39,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate trained Dog Breed Classifier")
     parser.add_argument("--model_path", type=str, default="checkpoints/saved_model.pth")
     parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument("--data_dir", type=str, default="data/split")
     args = parser.parse_args()
-    evaluate(model_path=args.model_path, device=args.device)
+    evaluate(device=args.device)
