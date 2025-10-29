@@ -7,22 +7,20 @@ def plot_metrics(train_losses, valid_accuracies, save_path="training_metrics.png
     epochs = range(1, len(train_losses) + 1)
     fig, ax1 = plt.subplots(figsize=(8, 5))
 
-    # גרף ראשון - Train Loss
+    #  Train Los
     ax1.set_xlabel('Epoch')
     ax1.set_ylabel('Train Loss', color='tab:blue')
     ax1.plot(epochs, train_losses, color='tab:blue', marker='o', label='Train Loss')
     ax1.tick_params(axis='y', labelcolor='tab:blue')
 
-    # גרף שני - Validation Accuracy
+    #   Validation Accuracy
     ax2 = ax1.twinx()
     ax2.set_ylabel('Validation Accuracy', color='tab:green')
     ax2.plot(epochs, valid_accuracies, color='tab:green', marker='x', label='Valid Accuracy')
     ax2.tick_params(axis='y', labelcolor='tab:green')
 
-    # כותרת לפני tight_layout עם padding כדי לא להיחתך
     plt.title("Training Metrics", pad=20)
 
-    # סידור פריסה ושמירה
     fig.tight_layout()
     plt.savefig(save_path, bbox_inches="tight")
     plt.show()

@@ -50,4 +50,3 @@ def evaluate_model(classifier, test_loader, feature_extractor, classes, device="
     plot_top_confusion_heatmap(cm, classes, top_n=10, save_path=os.path.join(figures_dir, "confusion_top10.png"))
     plot_top_confusions_bar(cm, classes, top_n=15, save_path=os.path.join(figures_dir, "top15_confusions.png"))
 
-    print(f"📁 Plots saved in {figures_dir}")
