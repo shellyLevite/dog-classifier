@@ -2,6 +2,8 @@ import os
 import torch
 from PIL import Image, ImageDraw, ImageFont
 from torchvision import transforms
+import argparse
+
 
 from src.data_pipeline.data_loader import get_classes_names
 from src.models.base.resnet import ResNet50FeatureExtractor
@@ -10,12 +12,7 @@ from src.models.base.resnet import ResNet50FeatureExtractor
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 TOP_K = 3
 
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CHECKPOINT_PATH = os.path.join(PROJECT_ROOT, "checkpoints", "saved_model.pth")
 
-INPUT_FOLDER = os.path.join(PROJECT_ROOT, "PREDICT", "predict_photos")
-OUTPUT_FOLDER = os.path.join(PROJECT_ROOT, "PREDICT", "predict_results")
-DATA_DIR = 'data/split'
 
 COLORS = [(0, 128, 0), (255, 165, 0), (255, 0, 0)]
 
@@ -26,36 +23,33 @@ def get_color(rank):
     return (0,0,0)
 
 def create_result_image(image, predictions, save_path):
-    """יוצר תמונה סופית עם הכלב במרכז והטקסט למטה"""
     try:
         font = ImageFont.truetype("arial.ttf", 36)
     except:
         font = ImageFont.load_default()
 
-    # Canvas קבוע
+    # Canvas
     canvas_width = 500
     canvas_height = 600
 
-    # שמירת יחס גובה-רוחב של התמונה
     img_ratio = image.width / image.height
     max_img_height = 400
     max_img_width = 400
-    if img_ratio > 1:  # רחבה
+    if img_ratio > 1:
         new_w = min(max_img_width, image.width)
         new_h = int(new_w / img_ratio)
-    else:  # גבוהה
+    else:
         new_h = min(max_img_height, image.height)
         new_w = int(new_h * img_ratio)
 
     image_resized = image.resize((new_w, new_h))
 
-    # יצירת Canvas חדש
+    # Canvas
     new_img = Image.new("RGB", (canvas_width, canvas_height), (255, 255, 255))
     x_offset = (canvas_width - new_w)//2
     y_offset = 20
     new_img.paste(image_resized, (x_offset, y_offset))
 
-    # ציור הטקסט
     draw = ImageDraw.Draw(new_img)
     spacing = 10
     y_start = y_offset + new_h + 20
@@ -90,7 +84,7 @@ def predict_image(feature_extractor, classifier, image_path, classes, transform)
 
 def predict(input_folder, save_image = False, output_folder = '', checkpoint_path = None):
     # Load classes
-    classes = get_classes_names(DATA_DIR)
+    classes = get_classes_names(args.split_dir)
 
     # Feature extractor
     feature_extractor = ResNet50FeatureExtractor().to(DEVICE)
@@ -134,4 +128,14 @@ def predict(input_folder, save_image = False, output_folder = '', checkpoint_pat
     return results
 
 if __name__ == "__main__":
-    predict(INPUT_FOLDER, True, OUTPUT_FOLDER, CHECKPOINT_PATH)
+    parser = argparse.ArgumentParser(description="Predict trained Dog Breed Classifier")
+    parser.add_argument("--report_dir", type=str, default="reports/figures")
+    parser.add_argument("--model_path", type=str, default="checkpoints/saved_model.pth")
+    parser.add_argument("--split_dir", type=str, default="data/split")
+    parser.add_argument("--input_folder", type=str, default="predict/predict_photos")
+    parser.add_argument("--output_folder", type=str, default="predict/predict_results")
+
+
+    args = parser.parse_args()
+
+    predict(args.input_folder, True, args.output_folder, args.model_path)

@@ -14,20 +14,17 @@ def main():
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--lr", type=float, default=0.001)
+    parser.add_argument("--project_root", type=str, default=os.path.dirname(os.path.abspath(__file__)))
+    parser.add_argument("--report_dir", type=str, default="/reports/figures")
+    parser.add_argument("--model_path", type=str, default="checkpoints/saved_model.pth")
+    parser.add_argument("--split_dir", type=str, default="data/split")
     args = parser.parse_args()
 
-    # ---------------------------
-    # Set project paths
-    # ---------------------------
-    PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-    REPORTS_DIR = os.path.join(PROJECT_ROOT, "reports", "figures")
-    MODEL_PATH = os.path.join(PROJECT_ROOT, "checkpoints", "saved_model.pth")
-    SPLIT_DIR = "data/split"
 
     # ---------------------------
     # Load data
     # ---------------------------
-    train_loader, valid_loader, test_loader,num_classes, class_names = get_dataloaders(SPLIT_DIR,args.batch_size)
+    train_loader, valid_loader, test_loader,num_classes, class_names = get_dataloaders(args.split_dir,args.batch_size)
 
     # ---------------------------
     # Feature extraction
@@ -56,8 +53,8 @@ def main():
         num_epochs=args.epochs,
         batch_size=args.batch_size,
         lr=args.lr,
-        save_dir=REPORTS_DIR,
-        model_path=MODEL_PATH,
+        save_dir=args.report_dir,
+        model_path=args.model_path
     )
 
 

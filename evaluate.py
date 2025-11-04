@@ -22,9 +22,7 @@ def evaluate(device="cpu"):
     classifier = torch.nn.Linear(input_dim, num_classes)
 
     # Load weights
-    project_root = os.path.dirname(os.path.abspath(__file__))
-    checkpoint_path = os.path.join(os.path.dirname(__file__), "checkpoints", "saved_model.pth")
-    classifier.load_state_dict(torch.load(checkpoint_path))
+    classifier.load_state_dict(torch.load(args.model_path))
     classifier.eval()
 
     # Run the evaluation
@@ -36,8 +34,10 @@ def evaluate(device="cpu"):
 
 
 if __name__ == "__main__":
+    print("hello")
     parser = argparse.ArgumentParser(description="Evaluate trained Dog Breed Classifier")
     parser.add_argument("--model_path", type=str, default="checkpoints/saved_model.pth")
+    parser.add_argument("--report_dir", type=str, default="/reports/figures")
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--data_dir", type=str, default="data/split")
     args = parser.parse_args()
