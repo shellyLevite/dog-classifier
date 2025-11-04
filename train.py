@@ -24,7 +24,7 @@ def main():
     # ---------------------------
     # Load data
     # ---------------------------
-    train_loader, valid_loader, test_loader,num_classes, class_names = get_dataloaders(args.split_dir,args.batch_size)
+    train_loader, valid_loader, _, num_classes, class_names = get_dataloaders(args.split_dir,args.batch_size)
 
     # ---------------------------
     # Feature extraction
